@@ -6,38 +6,62 @@
       margin: 0px
     }
 
+    button {
+      border-radius: 5px;
+      border: solid 1px lightgray;
+      background-color: lightcyan;
+      padding-left: 10px;
+      padding-right: 10px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+
+    select {
+      border-radius: 5px;
+      border: solid 1px lightgray;
+      background-color: lightcyan;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+
     .playerFrame {
       border: none;
       visibility: visible;
-      width: 500px;
-      height: 439px;
+      width: 480;
+      height: 270;
+      min-width: 480;
+      min-height: 270;
     }
 
     .rButton {
 
-      width: 25px;
       position: absolute;
+      top: 0px;
+      right: 5px;
+      width: 25px;
+      height: 25px;
 
-      margin-left: 475px;
       font-family: Arial Unicode MS;
       color: white;
       margin-top: 5px;
-      height: 25px;
       text-align: center;
       cursor: hand;
-      top: 0px
     }
 
     .fb-video {
       float: left;
       position: relative;
+
     }
 
     .panelTable {
       display: table;
       box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.75);
       width: 100%;
-      margin-bottom: 20px;
+      min-width: 480;
+      /*   margin-bottom: 20px;*/
     }
 
     .panelTable div {
@@ -54,37 +78,119 @@
 <body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script>
-    var vWidth = 500;
+    var vWidth = 480;
+    var vHeight = vWidth / 16 * 9;
     var userLang = (navigator.language || navigator.userLanguage).replace("-", "_");
     var pID = 1;
     var vAutoplay = "false";
-
-
     var r;
+    var players = Array();
+
+    window.fbAsyncInit = function () {
+      fb_init();
+    };
+
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) { return; }
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/" + userLang + "/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+
+
+
+
+
     $(document).ready(function () {
       r = $("#fb-root")[0];
+      window.onresize = function () {
+        resized();
+      }
     });
+
+    function fb_init() {
+      FB.init({
+        appId: '{your-app-id}',
+        status: true,
+        xfbml: true,
+        version: 'v2.7' // or v2.6, v2.5, v2.4, v2.3
+      });
+
+      FB.Canvas.startTimer();
+
+      FB.Canvas.setDoneLoading(
+        function (result) {
+          console.log(result);
+        }
+      );
+
+      FB.Event.subscribe('xfbml.render', function (msg) {
+        fbPluginReadnered(msg);
+      });
+
+      var my_video_player;
+      FB.Event.subscribe('xfbml.ready', function (msg) {
+        fbPluginReadnered(msg);
+        /*
+        if (msg.type === 'video') {
+          my_video_player = msg.instance;
+          console.log(msg);
+        }*/
+      });
+
+
+    }
+
+    function fbPluginReadnered(msg) {
+      console.log(msg);
+    }
 
     function addPlayer(videoURL) {
       videoURL = prompt("Video URL or ID:");
       if (videoURL != null) {
         var vID = check(videoURL);
         if (vID != null) {
+
+          
           var captionShown = document.getElementById("videoCaptionShown");
           captionShown = captionShown.options[captionShown.selectedIndex].value;
+
+          getWidth = getPlayerWidth();
+
 
           var a = document.createElement("DIV");
           a.id = "player" + pID;
           a.setAttribute("class", "fb-video");
+          a.setAttribute("data-href", videoURL);
+          //a.setAttribute("data-width", vWidth);
+
+          FB.XFBML.parse(document.getElementById("fb-root"), function () { console.log("Readered"); });
+          FB.Event.subscribe('xfbml.ready', function (msg) {
+            if (msg.type === 'video') {
+              console.log("Readered video");
+              //do something
+            }
+          });
+          
 
           var b = document.createElement("DIV");
           a.appendChild(b);
 
           var f = document.createElement("IFRAME");
-          f.setAttribute("src", "https://www.facebook.com/v3.3/plugins/video.php?mute=false&autoplay=" + vAutoplay + "&href=https%3A%2F%2Fwww.facebook.com%2Fstandnewshk%2Fvideos%2F" + vID + "%2F&locale=" + userLang + "&sdk=joey&show_text=" + captionShown + "&width=" + vWidth);
+          f.setAttribute("src", "https://www.facebook.com/v3.3/plugins/video.php?mute=false&heught=270&autoplay=" + vAutoplay + "&href=https%3A%2F%2Fwww.facebook.com%2Fstandnewshk%2Fvideos%2F" + vID + "%2F&locale=" + userLang + "&sdk=joey&show_caption=true&show_text=" + captionShown);
           f.setAttribute("scrolling", "no");
           f.setAttribute("allowfullscreen", vAutoplay);
           f.setAttribute("class", "playerFrame");
+          f.style.width = getWidth.width;
+          f.style.height = getWidth.height;
+
+         
+          /*   f.addEventListener("DOMContentLoaded", function () {
+               this.style.width = this.document.clientWidth;
+             });*/
+
 
           var rButton = document.createElement("DIV");
           rButton.setAttribute("class", "rButton");
@@ -95,7 +201,13 @@
           b.appendChild(f);
           b.appendChild(rButton);
           r.appendChild(a);
+          players.push(f);
+     
+
+      
+
           pID++;
+          // $(window).trigger('fbAsyncInit');
         }
         else {
           alert("Video URL or ID 可能無效。");
@@ -117,11 +229,55 @@
       } else {
         return null;
       }
-
     }
 
     function removePlayer(id) {
+      var i = players.indexOf(id);
+     // players.splice(i, 1);//pop(id.getElementsByTagName("IFRAME")[0]);
       r.removeChild(id);
+    }
+
+    function getPlayerWidth() {
+      var FramePerRow = document.getElementById("FramePerRow").options[document.getElementById("FramePerRow").selectedIndex].value;
+      var w = Math.floor($("#root")[0].clientWidth / FramePerRow)
+      var h = Math.floor(w / 16 * 9);
+      return { width: w, height: h };
+    }
+
+    function resized() {
+      var getWidth = getPlayerWidth();
+      var newWidth = getWidth.width;
+      var newHeight = getWidth.height;
+
+
+      for (i = 0; i < players.length; i++) {
+        var element = players[i];
+        element.style.width = newWidth;
+        element.style.height = newHeight;
+      }
+      players.forEach(element => {
+
+      });
+
+
+      /*
+            var elem,
+              style;
+            elem = document.querySelector('.playerFrame');
+            style = getComputedStyle(elem);
+            var newWidth = document.clientWidth / 4;
+            var newHeight = newWidth / 16 * 9;
+            style.width = newWidth; //`20px`
+            style.height = newHeight; //`20px`   */
+    }
+
+    function muteAll() {
+      players.forEach(element => {
+
+        /* var vp = element.getElementsByTagName("video")[0];
+         vp.mute = true;*/
+        element.muted = true;
+      });
     }
   </script>
 
@@ -136,19 +292,31 @@
       <div>
         <span>Show Caption</span>
         <select id="videoCaptionShown">
-
           <option value="false">False</option>
           <option value="true">True</option>
         </select>
       </div>
+      <div>
+        Grid
+        <select id="FramePerRow" onchange="resized();">
+          <option value="4">4 x n</option>
+          <option value="3">3 x n</option>
+          <option value="2">2 x n</option>
+          <option value="1">1 x n</option>
+        </select>
+      </div>
+      <div>
+        <button onclick="muteAll();">Unmute All</button>
+      </div>
     </div>
   </div>
 
+  <div id="root" style="width: 100%">
+    <div id="fb-root">
+      <div id="t" class="fb-video">
+        <div id="t1">
 
-  <div id="fb-root">
-    <div id="t" class="fb-video">
-      <div id="t1">
-
+        </div>
       </div>
     </div>
   </div>
