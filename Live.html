@@ -1,7 +1,7 @@
 <html>
 
-  <head>
-    <style>
+<head>
+  <style>
     body {
       margin: 0px
     }
@@ -35,7 +35,7 @@
       min-height: 270;
     }
 
-    .playerContainer{
+    .playerContainer {
       float: left;
     }
 
@@ -45,35 +45,32 @@
       right: 0px;
     }
 
-    .rButton {
+    .playerToolButton {
       position: relative;
       float: left;
       top: 0px;
-      
-      width: 20px;
-      height: 20px;
-      background-image: url('/iXwrYnS92WB.png');
-      background-position: -21px -572px;
-     font-family: Arial Unicode MS;
-      color: white;
-      margin: 5px;
-      text-align: center;
-      cursor: hand;
-    }
-
-    .soundSoloButton {
-      position: relative;
-      float: left;
-      top: 0px;      
       width: 20px;
       height: 20px;
       font-family: Arial Unicode MS;
       color: white;
-      margin: 5px;
+      margin: 15px;
       text-align: center;
       cursor: hand;
+    }
+
+    .playerToolButton[data-button=rButton] {
+      background-image: url('/iXwrYnS92WB.png');
+      background-position: -21px -572px;
+    }
+
+    .playerToolButton[data-button=soundSoloButton] {
       background-image: url('/iXwrYnS92WB.png');
       background-position: -42px -467px;
+    }
+
+    .playerToolButton[data-button=pauseButton] {
+      background-image: url('/iXwrYnS92WB.png');
+      background-position: -25px -319px;
     }
 
     .fb-video {
@@ -99,12 +96,11 @@
       padding: 10px;
     }
   </style>
-  </head>
+</head>
 
-  <body>
-    <script
-      src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script>
+<body>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script>
     var vWidth = 480;
     var vHeight = vWidth / 16 * 9;
     var userLang = (navigator.language || navigator.userLanguage).replace("-", "_");
@@ -112,8 +108,9 @@
     var vAutoplay = "false";
     var r;
     var players = Array();
+    var videoURL = Array();
     var playerDoc = "";
-
+    var initFunction = function (msg) { appInit(); };
 
     window.fbAsyncInit = function () {
       fb_init();
@@ -133,7 +130,6 @@
       window.onresize = function () {
         resized();
       }
-
     });
 
     function fb_init() {
@@ -144,115 +140,104 @@
         version: 'v2.7' // or v2.6, v2.5, v2.4, v2.3
       });
 
-     /* FB.Canvas.startTimer();
+      FB.Event.subscribe('xfbml.render', initFunction);
 
-      FB.Canvas.setDoneLoading(
-        function (result) {
-          console.log(result);
-        }
-      );*/
-
-      FB.Event.subscribe('xfbml.render', function (msg) {
-        fbPluginReadnered("Render");
-      });
-
-      var my_video_player;
+      //var my_video_player;
       FB.Event.subscribe('xfbml.ready', function (msg) {
         //fbPluginReadnered("Ready");
-
+        console.log(msg);
         if (msg.type === 'video') {
           pushPlayer(msg);
           renderedPlayer(msg);
+          msg.instance.unmute();
           //my_video_player = msg.instance;
-          console.log(msg);
+          //   console.log(msg);
         }
       });
+    }
 
 
+    function appInit() {
+      fbPluginReadnered("Facebook API Loaded.");
+      document.getElementById("apiLoading").style.display = "none";
+      var v = getCookie();
+      if (v !== null) {
+        if (window.confirm("Video history found.\n\nDo you would like to re-open?")) {
+          loadHistory(v);
+        }
+      }
+
+      FB.Event.unsubscribe('xfbml.render', initFunction);
     }
 
     function fbPluginReadnered(msg) {
       console.log(msg);
     }
 
-    function addPlayer(videoURL) {
-      videoURL = prompt("Video URL or ID:");
+    function addPlayerByUser() {
+      let videoURL = prompt("Video URL or ID:");
       if (videoURL != null) {
-        var vID = check(videoURL);
-        if (vID != null) {
-          var captionShown = document.getElementById("videoCaptionShown");
-          captionShown = captionShown.options[captionShown.selectedIndex].value;
+        addPlayer(videoURL);
+      }
+      else {
+        alert("Video URL or ID 可能無效。");
+      }
+    }
 
-var c=document.createElement("DIV");
-getWidth = getPlayerWidth();
-      c.style.width = getWidth.width;
-      c.className="playerContainer";
+    function addPlayer(videoURL) {
 
-          var player = document.createElement("DIV");
-          player.id = "player" + pID;
-          player.setAttribute("class", "fb-video");
-          player.setAttribute("data-href", videoURL);
-          //a.setAttribute("data-width", vWidth);
+      var vID = check(videoURL);
+      if (vID != null) {
+        var captionShown = document.getElementById("videoCaptionShown");
+        captionShown = captionShown.options[captionShown.selectedIndex].value;
 
-          var b = document.createElement("DIV");
-          //   a.appendChild(b);
+        var c = document.createElement("DIV");
+        getWidth = getPlayerWidth();
+        c.style.width = getWidth.width;
+        c.className = "playerContainer";
 
-      /*    var rButton = document.createElement("DIV");
-          rButton.setAttribute("class", "rButton");
-          rButton.addEventListener("click", function () { removePlayer(a) });
-          rButton.innerText = "X";
+        var player = document.createElement("DIV");
+        player.id = "player" + pID;
+        player.setAttribute("class", "fb-video");
+        player.setAttribute("data-href", videoURL);
+        player.setAttribute("data-autoplay", "false");
+        //player.setAttribute("data-mute","False");
+        //a.setAttribute("data-width", vWidth);
+
+        var b = document.createElement("DIV");
+        //   a.appendChild(b);
+
+        /*  var f = document.createElement("IFRAME");
+        f.addEventListener("DOMContentLoaded", function () {
+            this.style.width = this.document.clientWidth;
+          });
+       f.setAttribute("src", "https://www.facebook.com/v3.3/plugins/video.php?mute=false&heught=270&autoplay=" + vAutoplay + "&href=https%3A%2F%2Fwww.facebook.com%2Fstandnewshk%2Fvideos%2F" + vID + "%2F&locale=" + userLang + "&sdk=joey&show_caption=true&show_text=" + captionShown);
+       //f.setAttribute("src","about:blank");
+       f.setAttribute("scrolling", "no");
+       f.setAttribute("allowfullscreen", vAutoplay);
+       f.setAttribute("class", "playerFrame");
 */
 
-          var f = document.createElement("IFRAME");
-          /*   f.addEventListener("DOMContentLoaded", function () {
-               this.style.width = this.document.clientWidth;
-             });*/
-          f.setAttribute("src", "https://www.facebook.com/v3.3/plugins/video.php?mute=false&heught=270&autoplay=" + vAutoplay + "&href=https%3A%2F%2Fwww.facebook.com%2Fstandnewshk%2Fvideos%2F" + vID + "%2F&locale=" + userLang + "&sdk=joey&show_caption=true&show_text=" + captionShown);
-          //f.setAttribute("src","about:blank");
-          f.setAttribute("scrolling", "no");
-          f.setAttribute("allowfullscreen", vAutoplay);
-          f.setAttribute("class", "playerFrame");
+        // f.contentDocument.document=createPlayerContent(videoURL);
 
 
-          // f.contentDocument.document=createPlayerContent(videoURL);
+        //b.appendChild(f);        
+        c.appendChild(player);
+        r.appendChild(c);
 
-
-          //b.appendChild(f);
-       //   b.appendChild(rButton);
-       c.appendChild(player);
-          r.appendChild(c);
-          //  players.push(f);
-
-
-
-
-
-          /*  FB.Event.subscribe('xfbml.ready', function (msg) {
-              fbPluginReadnered(msg);
-              /*
-              if (msg.type === 'video') {
-                my_video_player = msg.instance;
-                console.log(msg);
-              }
-            });*/
-
-
-          FB.XFBML.parse(c, function () {
-            console.log("Parsed");
-          });
+        FB.XFBML.parse(c, function () {
+          console.log("Parsed");
+        });
 
 
         //  b.appendChild(rButton);
 
-          //  a.style.height = getWidth.height;
+        //  a.style.height = getWidth.height;
 
-          pID++;
-          // $(window).trigger('fbAsyncInit');
-        }
-        else {
-          alert("Video URL or ID 可能無效。");
-        }
+        pID++;
+        // $(window).trigger('fbAsyncInit');
       }
+
     }
 
     function renderedPlayer(plugin) {
@@ -262,27 +247,35 @@ getWidth = getPlayerWidth();
 
 
       var rButton = document.createElement("DIV");
-      rButton.setAttribute("class", "rButton");
-      rButton.addEventListener("click", function () { removePlayer(element) });    
+      rButton.setAttribute("class", "playerToolButton");
+      rButton.setAttribute("data-button", "rButton");
+      rButton.addEventListener("click", function () { removePlayer(element) });
       //rButton.innerText = "X";
       rButton.title = "Close";
 
       var soundSoloButton = document.createElement("DIV");
-      soundSoloButton.className = "soundSoloButton";
+      soundSoloButton.className = "playerToolButton";
+      soundSoloButton.setAttribute("data-button", "soundSoloButton");
       soundSoloButton.addEventListener("click", function () { soundSolo(plugin) });
+      soundSoloButton.title = "Sound Solo";
+
+      var pauseButton = document.createElement("DIV");
+      pauseButton.className = "playerToolButton";
+      pauseButton.setAttribute("data-button", "pauseButton");
+      pauseButton.addEventListener("click", function () { pause(plugin) })
+      pauseButton.title = "Puase";
 
       aa.appendChild(soundSoloButton);
+      aa.appendChild(pauseButton);
       aa.appendChild(rButton);
       element.appendChild(aa);
-     
+
     }
 
-    function pushPlayer(plugin) {
-      players.push(plugin);
-    }
+
 
     function check(videoURL) {
-      var urlRex = /.*facebook.com\/.*\/videos\/(\d+).*/
+      var urlRex = /.*facebook.com\/.*\/videos\/(\d+).*/;
       var urlRex2 = /(\d+)/;
 
       let matches = videoURL.match(urlRex);
@@ -297,18 +290,48 @@ getWidth = getPlayerWidth();
       }
     }
 
+    function pushPlayer(plugin) {
+      players.push(plugin);
+      videoURL.push(document.getElementById(plugin.id).getAttribute("data-href"));
+      updateCookie();
+    }
+
     function removePlayer(element) {
-      var i=0;
-      players.forEach( ele=>{
-        if(ele.id===element.id){
-//break;
-players.splice(i, 1);//pop(id.getElementsByTagName("IFRAME")[0]);
-      r.removeChild(element.parentElement);
+      var i = 0;
+      players.forEach(ele => {
+        if (ele.id === element.id) {
+          //break;
+          players.splice(i, 1);//pop(id.getElementsByTagName("IFRAME")[0]);
+          videoURL.splice(i, 1);
+          r.removeChild(element.parentElement);
+          updateCookie();
         }
-i++;
-      } );
-  //    var i = players.indexOf(id);
-    
+        i++;
+      });
+      //    var i = players.indexOf(id);
+    }
+
+    function updateCookie() {
+      localStorage.setItem("videoURL", JSON.stringify(videoURL));/* }, function () {
+        console.log('Value is set to ' + value);
+      });*/
+    }
+
+    function getCookie() {
+      var re = localStorage.getItem("videoURL");
+      console.log('Value currently is ' + re);
+      return re;
+    }
+
+    function loadHistory(json) {
+      json = JSON.parse(json);
+      json.forEach(ele => {
+        addPlayer(ele);
+      })
+    }
+
+    function clearStorage() {
+      window.localStorage.clear();
     }
 
     function getPlayerWidth() {
@@ -330,8 +353,8 @@ i++;
 
       for (i = 0; i < players.length; i++) {
         var element = document.getElementById(players[i].id).parentElement;
-        if(element!=null){
-        element.style.width = newWidth;
+        if (element != null) {
+          element.style.width = newWidth;
         }
         //  element.style.height = newHeight;
       }
@@ -339,16 +362,6 @@ i++;
 
       });
 
-
-      /*
-      var elem,
-      style;
-      elem = document.querySelector('.playerFrame');
-      style = getComputedStyle(elem);
-      var newWidth = document.clientWidth / 4;
-      var newHeight = newWidth / 16 * 9;
-      style.width = newWidth; //`20px`
-      style.height = newHeight; //`20px` */
     }
 
     function muteAll() {
@@ -372,6 +385,10 @@ i++;
     function soundSolo(plugin) {
       muteAll();
       plugin.instance.unmute();
+    }
+
+    function pause(plugin) {
+      plugin.instance.pause();
     }
 
     function fullscreen() {
@@ -411,73 +428,55 @@ i++;
         document.msExitFullscreen();
       }
     }
-/*
-        function createPlayerContent(videoURL) {
-          var contentBody = document.createElement("BODY");
-    
-          var playerScript = document.createElement("SCRIPT");
-          playerScript.setAttribute("src", "player.js");
-    
-    
-          var fb_root = document.createElement("DIV");
-          fb_root.id = "fb-root";
-    
-          var fb_video = document.createElement("DIV");
-          fb_video.className = "fb-video"
-          fb_video.setAttribute("data-href", videoURL);
-          fb_video.setAttribute("data-allowfullscreen", true);
-    
-    
-          contentBody.appendChild(playerScript);
-          contentBody.appendChild(fb_root);
-          contentBody.appendChild(fb_video);
-    
-          return contentBody;
-        }*/
   </script>
-    <div class="panelTable">
+  <div class="panelTable">
+    <div>
       <div>
-        <div>
-          <button onclick="addPlayer();">新增影片</button>
-        </div>
-        <div style="display: none">
-          <span>Show Caption</span>
-          <select id="videoCaptionShown">
-            <option value="false">False</option>
-            <option value="true">True</option>
-          </select>
-        </div>
-        <div>
-          Grid
-          <select id="FramePerRow" onchange="resized();">
-            <option value="4">4 x n</option>
-            <option value="3">3 x n</option>
-            <option value="2">2 x n</option>
-            <option value="1">1 x n</option>
-          </select>
-        </div>
-        <div>
-          <button onclick="unmuteAll();">Unmute All</button>
-        </div>
+        <button onclick="addPlayerByUser();">新增影片</button>
+      </div>
+      <div style="display: none">
+        <span>Show Caption</span>
+        <select id="videoCaptionShown">
+          <option value="false">False</option>
+          <option value="true">True</option>
+        </select>
+      </div>
+      <div>
+        Grid
+        <select id="FramePerRow" onchange="resized();">
+          <option value="4">4 x n</option>
+          <option value="3">3 x n</option>
+          <option value="2">2 x n</option>
+          <option value="1">1 x n</option>
+        </select>
+      </div>
+      <div>
+        <button onclick="unmuteAll();">Unmute All</button>
+      </div>
 
-        <div>
-          <button onclick="fullscreen();">FullScreen</button>
+      <div>
+        <button onclick="fullscreen();">FullScreen</button>
+      </div>
+    <div>
+      <button onclick="clearStorage()">Clear History</button>
+    </div>
+    </div>
+  </div>
+
+  <div id="root" style="width: 100%">
+    <div id="fb-root">
+      <div id="t" class="fb-video">
+        <div id="t1">
+
         </div>
       </div>
     </div>
 
-    <div id="root" style="width: 100%">
-      <div id="fb-root">
-        <div id="t" class="fb-video">
-          <div id="t1">
+  </div>
 
-          </div>
-        </div>
-      </div>
-      <!-- Your embedded video player code 
-    <div class="fb-video" data-href="https://www.facebook.com/facebook/videos/10153231379946729/" data-width="500" data-allowfullscreen="true"></div>-->
-    </div>
-
-  </body>
+  <div id="apiLoading" style="width:100%;text-align: center;">
+    <span>Loading Facebook API...</span>
+  </div>
+</body>
 
 </html>
