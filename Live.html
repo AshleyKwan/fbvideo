@@ -1,29 +1,40 @@
 <html>
 
 <head>
+  <title>Live</title>
   <style>
     body {
-      margin: 0px
+      margin: 0px;
+      background-color: black;
+      color: lightgray;
     }
 
     button {
       border-radius: 5px;
-      border: solid 1px lightgray;
-      background-color: lightcyan;
+      border: solid 1px rgb(51, 51, 51);
+      /* border: solid 1px lightgray; */
+      background-color: rgb(107, 107, 107, 1);
+      /* background-color: lightcyan; */
       padding-left: 10px;
       padding-right: 10px;
       padding-top: 5px;
       padding-bottom: 5px;
+      /* color: rgb(51, 51, 51, 1); */
+      color: lightgray;
     }
 
     select {
       border-radius: 5px;
-      border: solid 1px lightgray;
-      background-color: lightcyan;
-      padding-left: 5px;
-      padding-right: 5px;
+      border: solid 1px rgb(51, 51, 51);
+      /* border: solid 1px lightgray; */
+      background-color: rgb(107, 107, 107, 1);
+      /* background-color: lightcyan; */
+      padding-left: 10px;
+      padding-right: 10px;
       padding-top: 5px;
       padding-bottom: 5px;
+      /* color: rgb(51, 51, 51, 1); */
+      color: lightgray;
     }
 
     .playerFrame {
@@ -49,28 +60,32 @@
       position: relative;
       float: left;
       top: 0px;
-      width: 20px;
-      height: 20px;
       font-family: Arial Unicode MS;
       color: white;
-      margin: 15px;
       text-align: center;
       cursor: hand;
     }
 
-    .playerToolButton[data-button=rButton] {
-      background-image: url('/iXwrYnS92WB.png');
-      background-position: -21px -572px;
+    .playerToolButton div {
+      margin: 15px;
+      width: 20px;
+      height: 20px;
     }
 
-    .playerToolButton[data-button=soundSoloButton] {
-      background-image: url('/iXwrYnS92WB.png');
-      background-position: -42px -467px;
+
+    .playerToolButton[data-button=rButton] div {
+      background-image: url('/liveIcon.png');
+      background-position: -40px 0px;
     }
 
-    .playerToolButton[data-button=pauseButton] {
-      background-image: url('/iXwrYnS92WB.png');
-      background-position: -25px -319px;
+    .playerToolButton[data-button=soundSoloButton] div {
+      background-image: url('/liveIcon.png');
+      background-position: -20px 0px;
+    }
+
+    .playerToolButton[data-button=pauseButton] div {
+      background-image: url('/liveIcon.png');
+      background-position: -60px 0px;
     }
 
     .fb-video {
@@ -84,7 +99,7 @@
       box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.75);
       width: 100%;
       min-width: 480;
-      /*   margin-bottom: 20px;*/
+      background-color: rgba(37, 37, 38, 1);
     }
 
     .panelTable div {
@@ -101,7 +116,7 @@
 <body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script>
-    var vWidth = 480;
+    var vWidth = 960;
     var vHeight = vWidth / 16 * 9;
     var userLang = (navigator.language || navigator.userLanguage).replace("-", "_");
     var pID = 1;
@@ -111,6 +126,89 @@
     var videoURL = Array();
     var playerDoc = "";
     var initFunction = function (msg) { appInit(); };
+
+
+
+    class FBPlayer {
+      constructor(id, videoID) {
+        this.id = id;
+
+        var player = document.createElement("DIV");
+        player.id = this.id;
+        player.setAttribute("class", "fb-video");
+        player.setAttribute("data-href", "https://www.facebook.com/video.php?v=" + videoID);
+        player.setAttribute("data-autoplay", "false");
+        //player.setAttribute("data-mute","False");
+        player.setAttribute("data-width", vWidth);
+
+        r.appendChild(c);
+
+        FB.XFBML.parse(c, function () {
+          console.log("Parsed");
+        });
+      }
+
+      play() {
+        this.instance.play();
+      }
+
+      pause() {
+        this.instance.pause();
+      }
+
+      mute() {
+        this.instance.mute();
+      }
+
+      unmute() {
+        this.instance.unmute();
+      }
+
+      toString() {
+
+      }
+    }
+
+    class YouTubePlayer {
+      constructor(id, videoID, tagID) {
+        this.id = id;
+
+        var player = document.createElement("DIV");
+        player.id = "player" + pID;
+
+        r.appendChild(c);
+
+        this.instance = new YT.Player(player, {
+          height: vHeight,
+          width: vWidth,
+          videoId: videoID,
+          /*  events: {
+              'onReady': onPlayerReady,
+              'onStateChange': onPlayerStateChange
+            }*/
+        });
+      }
+
+      play() {
+        this.instance.playVideo();
+      }
+
+      pause() {
+
+      }
+
+      mute() {
+
+      }
+
+      unmute() {
+
+      }
+
+      toString() {
+
+      }
+    }
 
     window.fbAsyncInit = function () {
       fb_init();
@@ -122,6 +220,11 @@
       js = d.createElement(s); js.id = id;
       js.src = "https://connect.facebook.net/" + userLang + "/sdk.js";
       fjs.parentNode.insertBefore(js, fjs);
+
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }(document, 'script', 'facebook-jssdk'));
 
 
@@ -131,6 +234,10 @@
         resized();
       }
     });
+
+    function onYouTubeIframeAPIReady() {
+      console.log("YouTube API Loaded.");
+    }
 
     function fb_init() {
       FB.init({
@@ -142,16 +249,12 @@
 
       FB.Event.subscribe('xfbml.render', initFunction);
 
-      //var my_video_player;
       FB.Event.subscribe('xfbml.ready', function (msg) {
-        //fbPluginReadnered("Ready");
         console.log(msg);
         if (msg.type === 'video') {
           pushPlayer(msg);
           renderedPlayer(msg);
           msg.instance.unmute();
-          //my_video_player = msg.instance;
-          //   console.log(msg);
         }
       });
     }
@@ -160,6 +263,8 @@
     function appInit() {
       fbPluginReadnered("Facebook API Loaded.");
       document.getElementById("apiLoading").style.display = "none";
+      FB.Event.unsubscribe('xfbml.render', initFunction);
+
       var v = getCookie();
       if (v !== null) {
         if (window.confirm("Video history found.\n\nDo you would like to re-open?")) {
@@ -167,7 +272,7 @@
         }
       }
 
-      FB.Event.unsubscribe('xfbml.render', initFunction);
+
     }
 
     function fbPluginReadnered(msg) {
@@ -176,20 +281,24 @@
 
     function addPlayerByUser() {
       let videoURL = prompt("Video URL or ID:");
-      if (videoURL != null) {
-        addPlayer(videoURL);
+      if (videoURL != null && videoURL != "") {
+        if (videoURL != null && check(videoURL) != null) {
+          addPlayer(videoURL);
+        }
+        else {
+          alert("Video URL or ID 可能無效。");
+        }
       }
-      else {
-        alert("Video URL or ID 可能無效。");
-      }
+
     }
 
     function addPlayer(videoURL) {
 
       var vID = check(videoURL);
       if (vID != null) {
-        var captionShown = document.getElementById("videoCaptionShown");
-        captionShown = captionShown.options[captionShown.selectedIndex].value;
+        /*   var captionShown = document.getElementById("videoCaptionShown");
+           captionShown = captionShown.options[captionShown.selectedIndex].value;
+   */
 
         var c = document.createElement("DIV");
         getWidth = getPlayerWidth();
@@ -199,10 +308,10 @@
         var player = document.createElement("DIV");
         player.id = "player" + pID;
         player.setAttribute("class", "fb-video");
-        player.setAttribute("data-href", videoURL);
+        player.setAttribute("data-href", "https://www.facebook.com/video.php?v=" + vID);
         player.setAttribute("data-autoplay", "false");
         //player.setAttribute("data-mute","False");
-        //a.setAttribute("data-width", vWidth);
+        player.setAttribute("data-width", vWidth);
 
         var b = document.createElement("DIV");
         //   a.appendChild(b);
@@ -250,19 +359,21 @@
       rButton.setAttribute("class", "playerToolButton");
       rButton.setAttribute("data-button", "rButton");
       rButton.addEventListener("click", function () { removePlayer(element) });
-      //rButton.innerText = "X";
+      rButton.appendChild(document.createElement("DIV"));
       rButton.title = "Close";
 
       var soundSoloButton = document.createElement("DIV");
       soundSoloButton.className = "playerToolButton";
       soundSoloButton.setAttribute("data-button", "soundSoloButton");
       soundSoloButton.addEventListener("click", function () { soundSolo(plugin) });
+      soundSoloButton.appendChild(document.createElement("DIV"));
       soundSoloButton.title = "Sound Solo";
 
       var pauseButton = document.createElement("DIV");
       pauseButton.className = "playerToolButton";
       pauseButton.setAttribute("data-button", "pauseButton");
       pauseButton.addEventListener("click", function () { pause(plugin) })
+      pauseButton.appendChild(document.createElement("DIV"));
       pauseButton.title = "Puase";
 
       aa.appendChild(soundSoloButton);
@@ -275,19 +386,21 @@
 
 
     function check(videoURL) {
-      var urlRex = /.*facebook.com\/.*\/videos\/(\d+).*/;
-      var urlRex2 = /(\d+)/;
+      var urlExpressions = [/.*facebook.com\/video\.php\?v\=(\d+)/,
+        /.*facebook.com\/.*\/videos\/(\d+).*/,
+        /.*facebook.com\/story\.php\?story_fbid=\/(\d+)\&.*/,
+        /(\d+)/];
+      var i = 0;
 
-      let matches = videoURL.match(urlRex);
-      let matches2 = videoURL.match(urlRex2);
-
-      if (matches != null && matches.length == 2) {
-        return matches[1];
-      } else if (matches2 != null && matches2.length == 2) {
-        return matches2[1];
-      } else {
-        return null;
+      for (i = 0; i < urlExpressions.length - 1; i++) {
+        let matches = videoURL.match(urlExpressions[i]);
+        if (matches != null && matches.length == 2) {
+          return matches[1];
+        }
       }
+      return null;
+
+
     }
 
     function pushPlayer(plugin) {
@@ -361,7 +474,7 @@
       players.forEach(element => {
 
       });
-
+      FB.Canvas.setSize({ width: newWidth, height: newHeight });
     }
 
     function muteAll() {
@@ -457,25 +570,24 @@
       <div>
         <button onclick="fullscreen();">FullScreen</button>
       </div>
-    <div>
-      <button onclick="clearStorage()">Clear History</button>
-    </div>
+      <div>
+        <button onclick="clearStorage()">Clear Storage</button>
+      </div>
     </div>
   </div>
 
   <div id="root" style="width: 100%">
     <div id="fb-root">
-      <div id="t" class="fb-video">
-        <div id="t1">
 
-        </div>
-      </div>
     </div>
 
   </div>
 
-  <div id="apiLoading" style="width:100%;text-align: center;">
-    <span>Loading Facebook API...</span>
+  <div id="apiLoading" style="width: 100%;display: table;  height: 100%;position: absolute;  top: 0px;  left: 0px;text-align: center">
+    <div style="vertical-align: middle;display: table-cell;">
+      <span>Loading Facebook API...</span><br />
+      <span>Loading YouTube API...</span>
+    </div>
   </div>
 </body>
 
